@@ -79,6 +79,10 @@ print train.shape  # (689945, 51)
 # print test.shape  # (435075, 50)
 
 
+
+
+
+
 ##################################################################################################
 # data exploration
 ##################################################################################################
@@ -106,9 +110,6 @@ train_x, test_x = sf.get_split_data(x)
 train_y, test_y = sf.get_split_data(y)
 
 
-
-
-
 def get_auc(true_y, pred_y):
     fpr, tpr, _ = roc_curve(true_y, pred_y)
     return auc(fpr, tpr)
@@ -125,13 +126,13 @@ def get_xc_score(true_y, pred_y):
     return max(recall[gh_th])
 
 
-parameters = {'n_estimators': [20, 50], 'max_depth': [5, 10, 20, 50], 'min_weight_fraction_leaf': [0.005, 0.01]}
+parameters = {'n_estimators': [20, 50, 100, 200], 'max_depth': [10, 20, 30], 'min_weight_fraction_leaf': [0.001, 0.005, 0.01, 0.03]}
 clf = RandomForestClassifier()
 gs_clf = GridSearchCV(clf, param_grid=parameters, scoring='roc_auc', verbose=1)
 gs_clf.fit(x, y)
+print gs_clf.scorer_
 
-
-cf = RandomForestClassifier(n_estimators=50, max_depth=10, min_weight_fraction_leaf=0.005)
+cf = RandomForestClassifier(n_estimators=50, max_depth=30, min_weight_fraction_leaf=0.001)
 cf.fit(train_x, train_y)
 # cf.score(train_x, train_y)
 test_y_score = cf.predict_proba(test_x)
@@ -140,12 +141,12 @@ train_y_score = cf.predict_proba(train_x)
 get_auc(test_y, test_y_score[:, 1])
 get_auc(train_y, train_y_score[:, 1])
 
-precision, recall, _ = precision_recall_curve(test_y, test_y_score[:, 1])
-gh_th = precision >= 0.97
-max(recall[gh_th])
-
+# precision, recall, _ = precision_recall_curve(test_y, test_y_score[:, 1])
+# gh_th = precision >= 0.97
+# max(recall[gh_th])
 
 get_xc_score(test_y, test_y_score[:, 1])
+
 
 
 x = train.drop(['d', 'arrival', 'label'], axis=1)
