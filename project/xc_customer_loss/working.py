@@ -163,7 +163,7 @@ print get_auc(test_y, test_y_score[:, 1])
 print get_xc_score(test_y, test_y_score[:, 1])
 
 
-def feature_select(feature_importance, feature_name, sel=0.5):
+def get_importance_features(feature_importance, feature_name, sel=0.5):
     importances_sorted = np.argsort(feature_importance)
     if isinstance(sel, float):
         n = int(len(feature_name) * sel)
@@ -171,7 +171,7 @@ def feature_select(feature_importance, feature_name, sel=0.5):
     return feature_name[sel_indx]
 
 
-sel_feature = feature_select(cf.feature_importances_, x.columns, 0.8)
+sel_feature = get_importance_features(cf.feature_importances_, x.columns, 0.8)
 cf = RandomForestClassifier(n_estimators=500, max_depth=20, min_weight_fraction_leaf=0.008)
 cf.fit(train_x, train_y)
 test_y_score = cf.predict_proba(test_x)

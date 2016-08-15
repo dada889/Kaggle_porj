@@ -3,7 +3,6 @@ import random
 import numpy as np
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve, auc
-from sklearn.grid_search import GridSearchCV
 
 
 class DataShuffle(object):
