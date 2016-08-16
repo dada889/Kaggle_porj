@@ -16,9 +16,16 @@ train_y, test_y = sf.get_split_data(y)
 # dm_train = xgb.DMatrix(x, feature_names=x.columns, feature_types=['int']*len(x.columns))
 
 
+###################################################################
+# benchmark
+# auc: 0.74272184666547425
+# score : 0.0005054162517727286
+###################################################################
+
+
 
 xgb_clf = xgb.XGBClassifier(silent=1)
-xgb_clf.fit(train_x, train_y, verbose=1)
+xgb_clf.fit(train_x, train_y, verbose=2)
 
 pred_test = xgb_clf.predict_proba(test_x)
 pred_train = xgb_clf.predict_proba(train_x)
