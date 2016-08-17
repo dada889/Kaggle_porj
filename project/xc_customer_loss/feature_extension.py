@@ -6,6 +6,33 @@ from project.xc_customer_loss.utils import DataShuffle, get_xc_score, get_auc, a
 from project.xc_customer_loss.utils_feature import bin_iv_woe
 from sklearn.preprocessing import LabelEncoder
 from sklearn.grid_search import GridSearchCV
+from sklearn.cross_validation import KFold
+
+
+
+temp = KFold(10)
+class KCrossFold(object):
+
+    def __init__(self, n, n_folds):
+        self.n_folds = n_folds
+        self.kf = iter(KFold(n=n, n_folds=n_folds))
+        self.k = 0
+
+    def next(self):
+        self.k += 1
+        if self.k > self.n_folds:
+
+        else:
+            return self.kf.next()
+
+
+def get_kf(kf):
+
+iter(temp).next()
+
+
+
+
 
 
 obj_var = train.columns[train.dtypes == 'object'].tolist()
@@ -29,8 +56,10 @@ missing_ratio = train[con_var].isnull().sum()/float(len(train))
 ################ special feature
 extend_df = pd.DataFrame(index=train.index)
 d_time = pd.to_datetime(train['d'])
+# d_weekday = d_time.dt.dayofweek
 arrival_time = pd.to_datetime(train['arrival'])
-extend_df['d_arrival'] = (arrival_time - d_time).apply(lambda x: pd.tslib.Timedelta(x).days)
+extend_df['arrival_weekday'] = arrival_time.dt.dayofweek
+extend_df['d_arrival'] = (arrival_time - d_time).dt.days
 print extend_df.shape
 
 
@@ -54,6 +83,7 @@ iv_details, woe_df = update_woe_data(train, woe_df, iv_details, 'historyvisit_7o
 iv_details, woe_df = update_woe_data(train, woe_df, iv_details, 'd', train['label'], 50, encoder=LabelEncoder())
 iv_details, woe_df = update_woe_data(train, woe_df, iv_details, 'arrival', train['label'], 50, encoder=LabelEncoder())
 iv_details, woe_df = update_woe_data(extend_df, woe_df, iv_details, 'd_arrival', train['label'], 50, encoder=LabelEncoder())
+iv_details, woe_df = update_woe_data(extend_df, woe_df, iv_details, 'arrival_weekday', train['label'], 50, encoder=LabelEncoder())
 
 
 # _, temp_woe = bin_iv_woe(extend_df['d_arrival'], train['label'], n_bins=50, encoder=LabelEncoder())
@@ -81,20 +111,24 @@ x = x.drop(['d', 'arrival', 'label'], axis=1)
 x = x.fillna(0)
 y = train['label']
 sf = DataShuffle(y)
+sf.shuffle_split()
 train_x, test_x = sf.get_split_data(x)
 train_y, test_y = sf.get_split_data(y)
 
 ### fitting
-xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=500)
+xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=1000, max_depth=10)
 xgb_clf.fit(train_x, train_y, verbose=2)
 
 xgb.plot_importance(xgb_clf)
 
 pred_test = xgb_clf.predict_proba(test_x)
 pred_train = xgb_clf.predict_proba(train_x)
-get_auc(train_y, pred_train[:, 1])
-print get_auc(test_y, pred_test[:, 1])
-print get_xc_score(test_y, pred_test[:, 1])
+print 'train auc: %s' % get_auc(train_y, pred_train[:, 1])
+print 'test auc: %s' % get_auc(test_y, pred_test[:, 1])
+print 'xiecheng score: %s' % get_xc_score(test_y, pred_test[:, 1])
+
+
+
 
 ### fitting
 def get_importance_features(feature_importance, feature_name, sel=0.5):
@@ -135,19 +169,25 @@ train_y, test_y = sf.get_split_data(y)
 
 
 parameters = {
-    'n_estimators': [100, 200, 300, 400, 500, 600, 700, 800],
-    'learning_rate': [0.1, 0.01, 0.05, 0.2],
-    'max_depth': [3, 4, 5, 7, 8, 10, 12, 15, 20],
-    'gamma': [0, 0.5],
-    'subsample': [0.5, 0.7],
-    'min_child_weight': [1, 0.5, 2],
-    'scale_pos_weight': [0.3, 1, 3]
+    'n_estimators': [800, 1000, 1500],
+    # 'learning_rate': [0.05],
+    'max_depth': [10],
+    # 'gamma': [0, 0.5],
+    # 'subsample': [0.5, 0.7],
+    # 'min_child_weight': [1, 0.5, 2],
+    # 'scale_pos_weight': [0.3, 1, 3]
 }
 xgb_clf = xgb.XGBClassifier(silent=1)
 gs_clf = GridSearchCV(xgb_clf, param_grid=parameters, scoring='roc_auc', verbose=2)
 gs_clf.fit(x, y)
 print gs_clf.grid_scores_
 gs_clf.best_score_
+
+pred_test = xgb_clf.predict_proba(test_x)
+pred_train = xgb_clf.predict_proba(train_x)
+print 'train auc: %s' % get_auc(train_y, pred_train[:, 1])
+print 'test auc: %s' % get_auc(test_y, pred_test[:, 1])
+print 'xiecheng score: %s' % get_xc_score(test_y, pred_test[:, 1])
 
 
 
