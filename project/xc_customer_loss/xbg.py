@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from project.xc_customer_loss.load_data import train, test
-from project.xc_customer_loss.utils import *
+from project.xc_customer_loss.utils import KCrossFold, get_auc, get_xc_score
 import numpy as np
 import xgboost as xgb
 from sklearn.grid_search import GridSearchCV

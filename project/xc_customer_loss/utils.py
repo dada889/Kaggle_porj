@@ -3,6 +3,7 @@ import random
 import numpy as np
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve, auc
+from sklearn.cross_validation import KFold
 
 
 class DataShuffle(object):
@@ -53,4 +54,40 @@ def get_xc_score(true_y, pred_y):
     precision, recall, _ = precision_recall_curve(true_y, pred_y)
     gh_th = precision >= 0.97
     return max(recall[gh_th])
+
+
+class KCrossFold(object):
+
+    def __init__(self, n, n_folds=3):
+        self.n = n
+        self.n_folds = n_folds
+        self.kf = iter(KFold(n=n, n_folds=self.n_folds))
+        self.k = 0
+
+    def next(self):
+        self.k += 1
+        if self.k > self.n_folds:
+            self.kf = iter(KFold(n=self.n, n_folds=self.n_folds))
+            print 'Exceed the %s fold' % self.k
+            self.k = 0
+            return self.kf.next()
+        else:
+            return self.kf.next()
+
+    def shuffle(self, n=None):
+        n = n if n else self.n_folds
+        self.kf = iter(KFold(n=n, n_folds=self.n))
+
+    def get_data(self, x, y):
+        train_idx, test_idx = self.next()
+        return x.ix[train_idx, :], x.ix[test_idx, :], y[train_idx], y[test_idx]
+
+
+def get_importance_features(feature_importance, feature_name, sel=0.5):
+    importances_sorted = np.argsort(feature_importance)
+    if isinstance(sel, float):
+        n = int(len(feature_name) * sel)
+    sel_indx = importances_sorted[-n:]
+    return feature_name[sel_indx]
+
 

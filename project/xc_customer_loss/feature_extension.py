@@ -2,38 +2,13 @@
 import pandas as pd
 import numpy as np
 from project.xc_customer_loss.load_data import train, test
-from project.xc_customer_loss.utils import DataShuffle, get_xc_score, get_auc, auc_scoring
+from project.xc_customer_loss.utils import DataShuffle, get_xc_score, get_auc\
+    , auc_scoring, KCrossFold, get_importance_features
+
 from project.xc_customer_loss.utils_feature import bin_iv_woe
 from sklearn.preprocessing import LabelEncoder
 from sklearn.grid_search import GridSearchCV
-from sklearn.cross_validation import KFold
-
-
-
-temp = KFold(10)
-class KCrossFold(object):
-
-    def __init__(self, n, n_folds):
-        self.n_folds = n_folds
-        self.kf = iter(KFold(n=n, n_folds=n_folds))
-        self.k = 0
-
-    def next(self):
-        self.k += 1
-        if self.k > self.n_folds:
-
-        else:
-            return self.kf.next()
-
-
-def get_kf(kf):
-
-iter(temp).next()
-
-
-
-
-
+import matplotlib
 
 obj_var = train.columns[train.dtypes == 'object'].tolist()
 cat_var = train.columns[train.dtypes == 'int64'].tolist()
@@ -107,22 +82,34 @@ iv_value.sort(1)
 import xgboost as xgb
 
 x = pd.concat([train, woe_df, extend_df], axis=1, join_axes=[train.index])
-x = x.drop(['d', 'arrival', 'label'], axis=1)
+x = x.drop(['d', 'arrival', 'label', 'simpleid'], axis=1)
 x = x.fillna(0)
 y = train['label']
+
+kf = KCrossFold(len(y))
+train_x, test_x, train_y, test_y = kf.get_data(x, y)
+
+
 sf = DataShuffle(y)
 sf.shuffle_split()
 train_x, test_x = sf.get_split_data(x)
 train_y, test_y = sf.get_split_data(y)
 
 ### fitting
-xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=1000, max_depth=10)
+xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=500, max_depth=10)
 xgb_clf.fit(train_x, train_y, verbose=2)
-
-xgb.plot_importance(xgb_clf)
-
+# xgb.plot_importance(xgb_clf)
+# get_importance_features(xgb_clf.feature_importances_, train_x.columns)
+# fea = pd.DataFrame(xgb_clf.feature_importances_, index=train_x.columns)
+# fea.sort(0)
 pred_test = xgb_clf.predict_proba(test_x)
 pred_train = xgb_clf.predict_proba(train_x)
+
+
+
+
+
+
 print 'train auc: %s' % get_auc(train_y, pred_train[:, 1])
 print 'test auc: %s' % get_auc(test_y, pred_test[:, 1])
 print 'xiecheng score: %s' % get_xc_score(test_y, pred_test[:, 1])
