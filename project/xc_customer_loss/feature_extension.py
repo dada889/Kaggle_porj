@@ -26,14 +26,15 @@ one_year_feature = ['historyvisit_totalordernum', 'ordercanceledprecent', 'order
 
 city_feature = ['cityuvs', 'cityorders']
 
-hotel_var = ['hotelcr', 'commentnums', 'novoters', 'cancelrate', 'hoteluv', 'lowestprice']
+hotel_var = ['hotelcr', 'commentnums', 'novoters', 'cancelrate', 'hoteluv', 'lowestprice', 'cr']
 
 
-other_feature = ['cr', 'sid', 'h', 'firstorder_bu', 'avgprice']
+other_feature = ['sid', 'h', 'firstorder_bu', 'avgprice']
 
 train_ = train.fillna(0)
 all_feature = void_var + personal_feature + one_day_feature + seven_day_feature + one_year_feature + city_feature + hotel_var + other_feature
 train_id_index = train.set_index(train['sampleid'])
+train_id_index = train_id_index.fillna(0)
 
 
 
@@ -52,7 +53,7 @@ def non_decreasing(L):
 # first level detection
 ###########################################################################
 
-person_dect = personal_feature + one_year_feature
+person_dect = personal_feature + one_year_feature + city_feature
 print len(train_[person_dect].drop_duplicates())  # 160454
 
 gb_obj = train_.groupby(person_dect)
@@ -85,11 +86,11 @@ temp = personal_1['sampleid'].apply(lambda x: len(x))
 
 
 faul_sampleid = personal_df.ix[~personal_df['valid'], 'sampleid'].values
-print len(faul_sampleid)   # 20574
+print len(faul_sampleid)   # 9384
 wrong_sampleid = []
 for i in faul_sampleid:
     wrong_sampleid += i
-print len(wrong_sampleid)  # 241034
+print len(wrong_sampleid)  # 150882
 
 ###########################################################################
 # second level detection
@@ -97,7 +98,7 @@ print len(wrong_sampleid)  # 241034
 
 train_part = train_id_index.ix[wrong_sampleid, :]
 train_part = train_part.fillna(0)
-person_dect = personal_feature + one_year_feature + seven_day_feature + city_feature + ['h']
+person_dect = personal_feature + one_year_feature + seven_day_feature + city_feature
 print len(train_part[person_dect].drop_duplicates())  # 34719
 
 gb_obj = train_part.groupby(person_dect)
@@ -118,11 +119,11 @@ print personal_df_2.shape
 personal_df_2['unique_label'] = personal_df_2['label'].apply(lambda x: len(set(x)) == 1)
 personal_df_2['uniq_sid'] = personal_df_2['sid'].apply(lambda x: set(x))
 personal_df_2['continu_sid'] = personal_df_2['uniq_sid'].apply(lambda x: checkmylist(list(x)))
-personal_df_2['sid_increm'] = personal_df_2['sid'].apply(lambda x: non_decreasing(x))
-personal_df_2['id_increm'] = personal_df_2['sampleid'].apply(lambda x: non_decreasing(x))
-personal_df_2['valid'] = personal_df_2['sid_increm'] & personal_df_2['continu_sid']
+# personal_df_2['sid_increm'] = personal_df_2['sid'].apply(lambda x: non_decreasing(x))
+# personal_df_2['id_increm'] = personal_df_2['sampleid'].apply(lambda x: non_decreasing(x))
+personal_df_2['valid'] = personal_df_2['continu_sid']
 
-personal_df_2.ix[personal_df_2['valid'], 'unique_label']
+# personal_df_2.ix[personal_df_2['valid'], 'unique_label']
 personal_2 = personal_df_2.ix[personal_df_2['valid'], :]  # 13596
 # temp = personal_2['sampleid'].apply(lambda x: len(x))
 
