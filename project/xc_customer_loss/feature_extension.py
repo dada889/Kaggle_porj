@@ -32,10 +32,10 @@ hotel_var = ['hotelcr', 'commentnums', 'novoters', 'cancelrate', 'hoteluv', 'low
 
 other_feature = ['sid', 'h', 'firstorder_bu', 'avgprice']
 
-train_ = train.fillna(0)
+train_ = train.fillna(-1)
 all_feature = void_var + personal_feature + one_day_feature + seven_day_feature + one_year_feature + city_feature + hotel_var + other_feature
 train_id_index = train.set_index(train['sampleid'])
-train_id_index = train_id_index.fillna(0)
+train_id_index = train_id_index.fillna(-1)
 
 
 
@@ -55,7 +55,7 @@ def non_decreasing(L):
 ###########################################################################
 
 person_dect = personal_feature + one_year_feature + city_feature
-print len(train_[person_dect].drop_duplicates())  # 160454
+print len(train_[person_dect].drop_duplicates())  # 188406
 
 gb_obj = train_.groupby(person_dect)
 id_list = gb_obj['sampleid'].unique().values
@@ -78,8 +78,8 @@ personal_df['continu_sid'] = personal_df['uniq_sid'].apply(lambda x: checkmylist
 # personal_df['id_increm'] = personal_df['sampleid'].apply(lambda x: non_decreasing(x))
 personal_df['valid'] = personal_df['continu_sid']
 
-# personal_df.ix[personal_df['continu_sid'], 'unique_label']  # 177776/177903
-personal_1 = personal_df.ix[personal_df['valid'], :]  # 139880
+# personal_df.ix[personal_df['continu_sid'], 'unique_label']  # 177834/177961
+personal_1 = personal_df.ix[personal_df['valid'], :]  # 177961
 temp = personal_1['sampleid'].apply(lambda x: len(x))
 # personal_df.ix[(personal_df['continu_sid'] == True) & (personal_df['unique_label'] == False), :]
 temp = personal_df.ix[(personal_df['continu_sid'] == True) & (personal_df['unique_label'] == False), :]
@@ -92,20 +92,20 @@ print len(l)
 
 
 faul_sampleid = personal_df.ix[~personal_df['valid'], 'sampleid'].values
-print len(faul_sampleid)   # 10443
+print len(faul_sampleid)   # 10445
 wrong_sampleid = []
 for i in faul_sampleid:
     wrong_sampleid += i
-print len(wrong_sampleid)  # 124057
+print len(wrong_sampleid)  # 123909
 
 ###########################################################################
 # second level detection
 ###########################################################################
 
 train_part = train_id_index.ix[wrong_sampleid, :]
-train_part = train_part.fillna(0)
+train_part = train_part.fillna(-1)
 person_dect = personal_feature + one_year_feature + seven_day_feature + city_feature + ['h']
-print len(train_part[person_dect].drop_duplicates())  # 34719
+print len(train_part[person_dect].drop_duplicates())  # 35000
 
 gb_obj = train_part.groupby(person_dect)
 print len(gb_obj)
@@ -129,30 +129,30 @@ personal_df_2['continu_sid'] = personal_df_2['uniq_sid'].apply(lambda x: checkmy
 # personal_df_2['id_increm'] = personal_df_2['sampleid'].apply(lambda x: non_decreasing(x))
 personal_df_2['valid'] = personal_df_2['continu_sid']
 
-# personal_df_2.ix[personal_df_2['valid'], 'unique_label']  # 31839/32052
-personal_2 = personal_df_2.ix[personal_df_2['valid'], :]  # 32052
+# personal_df_2.ix[personal_df_2['valid'], 'unique_label']  # 31835/32048
+personal_2 = personal_df_2.ix[personal_df_2['valid'], :]  # 32048
 # personal_df_2.ix[(personal_df_2['continu_sid'] == True) & (personal_df_2['unique_label'] == False), :]
-l = []
-for i in temp:
-    l += i
-print l
+# l = []
+# for i in temp:
+#     l += i
+# print l
 
 # temp = personal_2['sampleid'].apply(lambda x: len(x))
 
 faul_sampleid = personal_df_2.ix[~personal_df_2['valid'], 'sampleid'].values
-print len(faul_sampleid)  # 2962
+print len(faul_sampleid)  # 2952
 wrong_sampleid = []
 for i in faul_sampleid:
     wrong_sampleid += i
-print len(wrong_sampleid)  # 27373
+print len(wrong_sampleid)  # 27304
 
 ###########################################################################
 # third level detection
 ###########################################################################
 train_third = train_id_index.ix[wrong_sampleid, :]
-
+train_third = train_third.fillna(-1)
 person_dect = personal_feature + one_year_feature + seven_day_feature + city_feature + ['h', 'sid']
-print len(train_third[person_dect].drop_duplicates())
+print len(train_third[person_dect].drop_duplicates())  # 8141
 
 gb_obj = train_third.groupby(person_dect)
 # id_list = gb_obj['sampleid'].unique().values
@@ -172,18 +172,18 @@ personal_df_3['unique_label'] = personal_df_3['label'].apply(lambda x: len(set(x
 personal_df_3['uniq_sid'] = personal_df_3['sid'].apply(lambda x: set(x))
 personal_df_3['continu_sid'] = personal_df_3['uniq_sid'].apply(lambda x: checkmylist(list(x)))
 
-print all(personal_df_3.ix[personal_df_3['continu_sid'], 'unique_label'])  # 7877/8169
+print all(personal_df_3.ix[personal_df_3['continu_sid'], 'unique_label'])  # 7849/8141
 personal_3 = personal_df_3.ix[personal_df_3['continu_sid'], :]
 # personal_df_3.ix[personal_df_3['uniq_sid'].apply(lambda x: len(x)) > 1, :]
 temp = personal_3['sampleid'].apply(lambda x: len(x))
 
 faul_sampleid = personal_df_3.ix[~personal_df_3['continu_sid'], 'sampleid'].values
-print len(faul_sampleid)  # 64
+print len(faul_sampleid)  # 0
 
 wrong_sampleid = []
 for i in faul_sampleid:
     wrong_sampleid += i
-print len(wrong_sampleid) #346
+print len(wrong_sampleid)  # 0
 
 
 ###########################################################################
@@ -268,6 +268,8 @@ min_df = train_id_index.groupby('group')[min_feature].min()
 mean_df = train_id_index.groupby('group')[mean_feature].mean()
 n_id = train_id_index.groupby('group')['sid'].count()
 n_sid = train_id_index.groupby('group')['sid'].nunique()
+n_h = train_id_index.groupby('group')['h'].nunique()
+# hs = train_id_index.groupby('group')['h'].unique()
 
 print 'done'
 
@@ -278,7 +280,7 @@ person_details_df.ix[persons_df.index, 'label'] = persons_df['p_label']
 person_details_df.ix[n_id.index, 'n_id'] = n_id
 # person_details_df['n_sid'] = -1
 person_details_df.ix[n_sid.index, 'n_sid'] = n_sid
-
+person_details_df.ix[n_h.index, 'n_h'] = n_h
 
 #########################################################################################
 # feature extend
@@ -300,40 +302,47 @@ extend_df['arrival_weekday'] = arrival_time.dt.dayofweek
 extend_df['d_arrival'] = (arrival_time - d_time).dt.days
 print extend_df.shape
 
+for i in person_details_df.columns:
+    if person_details_df[i].isnull().sum() > 50000:
+        extend_df[i + '_null'] = person_details_df[i].isnull().astype(int)
+print extend_df.shape
 
-################# woe value
-woe_df = pd.DataFrame(index=person_details_df.index)
-iv_details = {}
-woe_var = person_details_df.columns[person_details_df.isnull().sum() > 10000]
-for i in woe_var:
-    if len(train[i].unique()) > 500:
-        print i
-        iv_details[i], woe_df[i+'_woe'] = bin_iv_woe(person_details_df[i], person_details_df['label'], n_bins=40)
-
-
-def update_woe_data(data, woe_df, details, var_name, tgt, n_bins, encoder=None):
-    details[var_name], woe_df[var_name+'_woe'] = bin_iv_woe(data[var_name], tgt, n_bins=n_bins, encoder=encoder)
-    return details, woe_df
-
-# iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'h', person_details_df['label'], 24)
-# iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'ordernum_oneyear', person_details_df['label'], 25)
-# iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'cr', person_details_df['label'], 20)
-# iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'historyvisit_7ordernum', person_details_df['label'], 50)
-iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'd', person_details_df['label'], 50, encoder=LabelEncoder())
-iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'arrival', person_details_df['label'], 50, encoder=LabelEncoder())
-iv_details, woe_df = update_woe_data(extend_df, woe_df, iv_details, 'd_arrival', person_details_df['label'], 50, encoder=LabelEncoder())
-iv_details, woe_df = update_woe_data(extend_df, woe_df, iv_details, 'arrival_weekday', person_details_df['label'], 50, encoder=LabelEncoder())
-
-
-# _, temp_woe = bin_iv_woe(extend_df['d_arrival'], train['label'], n_bins=50, encoder=LabelEncoder())
 
 
 
-iv_value = {}
-for i in iv_details.keys():
-    iv_value[i] = iv_details[i][0]['iv'].sum()
-iv_value = pd.DataFrame(iv_value.items())
-iv_value.sort(1)
+################# woe value
+# woe_df = pd.DataFrame(index=person_details_df.index)
+# iv_details = {}
+# woe_var = person_details_df.columns[person_details_df.isnull().sum() > 10000]
+# for i in woe_var:
+#     if len(train[i].unique()) > 500:
+#         print i
+#         iv_details[i], woe_df[i+'_woe'] = bin_iv_woe(person_details_df[i], person_details_df['label'], n_bins=40)
+#
+#
+# def update_woe_data(data, woe_df, details, var_name, tgt, n_bins, encoder=None):
+#     details[var_name], woe_df[var_name+'_woe'] = bin_iv_woe(data[var_name], tgt, n_bins=n_bins, encoder=encoder)
+#     return details, woe_df
+#
+# # iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'h', person_details_df['label'], 24)
+# # iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'ordernum_oneyear', person_details_df['label'], 25)
+# # iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'cr', person_details_df['label'], 20)
+# # iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'historyvisit_7ordernum', person_details_df['label'], 50)
+# iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'd', person_details_df['label'], 50, encoder=LabelEncoder())
+# iv_details, woe_df = update_woe_data(person_details_df, woe_df, iv_details, 'arrival', person_details_df['label'], 50, encoder=LabelEncoder())
+# iv_details, woe_df = update_woe_data(extend_df, woe_df, iv_details, 'd_arrival', person_details_df['label'], 50, encoder=LabelEncoder())
+# iv_details, woe_df = update_woe_data(extend_df, woe_df, iv_details, 'arrival_weekday', person_details_df['label'], 50, encoder=LabelEncoder())
+#
+#
+# # _, temp_woe = bin_iv_woe(extend_df['d_arrival'], train['label'], n_bins=50, encoder=LabelEncoder())
+#
+#
+#
+# iv_value = {}
+# for i in iv_details.keys():
+#     iv_value[i] = iv_details[i][0]['iv'].sum()
+# iv_value = pd.DataFrame(iv_value.items())
+# iv_value.sort(1)
 
 #########################################################################################
 # testing
@@ -345,10 +354,10 @@ iv_value.sort(1)
 ################# test ######################
 import xgboost as xgb
 
-x = pd.concat([person_details_df, woe_df, extend_df], axis=1, join_axes=[person_details_df.index])
+x = pd.concat([person_details_df, extend_df], axis=1, join_axes=[person_details_df.index])
 # x = person_details_df
 x = x.drop(['d', 'arrival', 'label'], axis=1)
-x = x.fillna(0)
+x = x.fillna(-1)
 y = person_details_df['label']
 
 kf = KCrossFold(len(y))
@@ -361,9 +370,9 @@ train_x, test_x, train_y, test_y = kf.get_data(x, y)
 # train_y, test_y = sf.get_split_data(y)
 
 ### fitting
-xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=700, max_depth=10, subsample=0.5, min_child_weight=800)
+xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=500, max_depth=10, subsample=0.9, min_child_weight=300)
 xgb_clf.fit(train_x, train_y, verbose=2)
-# xgb.plot_importance(xgb_clf)
+xgb.plot_importance(xgb_clf)
 # get_importance_features(xgb_clf.feature_importances_, train_x.columns)
 # fea = pd.DataFrame(xgb_clf.feature_importances_, index=train_x.columns)
 # fea.sort(0)
@@ -372,7 +381,7 @@ pred_train = xgb_clf.predict_proba(train_x)
 
 print 'train auc: %s' % get_auc(train_y, pred_train[:, 1])
 print 'test auc: %s' % get_auc(test_y, pred_test[:, 1])
-print 'xiecheng score: %s' % get_xc_score(test_y, pred_test[:, 1])
+print 'xiecheng score: %s' % get_xc_score(true_y=test_y, pred_y=pred_test[:, 1])
 
 
 
@@ -414,32 +423,41 @@ print get_xc_score(test_y, pred_test[:, 1])
 # train_x, test_x = sf.get_split_data(x)
 # train_y, test_y = sf.get_split_data(y)
 
-x = pd.concat([person_details_df, woe_df, extend_df], axis=1, join_axes=[person_details_df.index])
+x = pd.concat([person_details_df, extend_df], axis=1, join_axes=[person_details_df.index])
 # x = person_details_df
 x = x.drop(['d', 'arrival', 'label'], axis=1)
 x = x.fillna(0)
 y = person_details_df['label']
 
-kf = KCrossFold(len(y))
-train_x, test_x, train_y, test_y = kf.get_data(x, y)
+# kf = KCrossFold(len(y))
+# train_x, test_x, train_y, test_y = kf.get_data(x, y)
 
 parameters = {
-    'n_estimators': [800],
+    'n_estimators': [500],
     # 'learning_rate': [0.05],
-    'max_depth': [4],
+    'max_depth': [4, 8, 12],
     # 'gamma': [0, 0.5],
-    'subsample': [0.5, 0.7],
-    # 'min_child_weight': [1, 0.5, 2],
+    'subsample': [0.9],
+    'min_child_weight': [100, 300, 500],
     # 'scale_pos_weight': [0.3, 1, 3]
 }
 xgb_clf = xgb.XGBClassifier(silent=1)
-gs_clf = GridSearchCV(xgb_clf, param_grid=parameters, scoring='roc_auc', verbose=2)
+gs_clf = GridSearchCV(xgb_clf, param_grid=parameters, scoring='roc_auc', verbose=3)
 gs_clf.fit(x, y)
 print gs_clf.best_score_
 gs_clf.grid_scores_
 
-pred_test = gs_clf.predict_proba(test_x)
-pred_train = gs_clf.predict_proba(train_x)
+
+
+
+xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=800, max_depth=4, subsample=0.9, min_child_weight=300)
+xgb_clf.fit(train_x, train_y, verbose=2)
+xgb.plot_importance(xgb_clf)
+# get_importance_features(xgb_clf.feature_importances_, train_x.columns)
+# fea = pd.DataFrame(xgb_clf.feature_importances_, index=train_x.columns)
+# fea.sort(0)
+pred_test = xgb_clf.predict_proba(test_x)
+pred_train = xgb_clf.predict_proba(train_x)
 print 'train auc: %s' % get_auc(train_y, pred_train[:, 1])
 print 'test auc: %s' % get_auc(test_y, pred_test[:, 1])
 print 'xiecheng score: %s' % get_xc_score(test_y, pred_test[:, 1])
