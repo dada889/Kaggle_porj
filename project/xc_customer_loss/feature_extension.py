@@ -298,8 +298,11 @@ extend_df = pd.DataFrame(index=person_details_df.index)
 d_time = pd.to_datetime(person_details_df['d'])
 # d_weekday = d_time.dt.dayofweek
 arrival_time = pd.to_datetime(person_details_df['arrival'])
-extend_df['arrival_weekday'] = arrival_time.dt.dayofweek
+arrival_weekday = arrival_time.dt.dayofweek
+arrival_weekday_dm = pd.get_dummies(arrival_weekday, prefix='arrival_weekday')
 extend_df['d_arrival'] = (arrival_time - d_time).dt.days
+extend_df = pd.concat([extend_df, arrival_weekday_dm], axis=1)
+
 print extend_df.shape
 
 for i in person_details_df.columns:
@@ -429,20 +432,25 @@ x = x.drop(['d', 'arrival', 'label'], axis=1)
 x = x.fillna(0)
 y = person_details_df['label']
 
+
+def xc_scoring(estimator, x, y):
+    pred_y = estimator.predict_proba(x)[:, 1]
+    result = get_xc_score(y, pred_y)
+    return result
 # kf = KCrossFold(len(y))
 # train_x, test_x, train_y, test_y = kf.get_data(x, y)
 
 parameters = {
     'n_estimators': [500],
     # 'learning_rate': [0.05],
-    'max_depth': [4, 8, 12],
+    'max_depth': [4, 7, 10],
     # 'gamma': [0, 0.5],
     'subsample': [0.9],
-    'min_child_weight': [100, 300, 500],
+    'min_child_weight': [400],
     # 'scale_pos_weight': [0.3, 1, 3]
 }
 xgb_clf = xgb.XGBClassifier(silent=1)
-gs_clf = GridSearchCV(xgb_clf, param_grid=parameters, scoring='roc_auc', verbose=3)
+gs_clf = GridSearchCV(xgb_clf, param_grid=parameters, scoring=xc_scoring, verbose=3)
 gs_clf.fit(x, y)
 print gs_clf.best_score_
 gs_clf.grid_scores_
@@ -450,7 +458,7 @@ gs_clf.grid_scores_
 
 
 
-xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=800, max_depth=4, subsample=0.9, min_child_weight=300)
+xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=500, max_depth=4, subsample=0.9, min_child_weight=500)
 xgb_clf.fit(train_x, train_y, verbose=2)
 xgb.plot_importance(xgb_clf)
 # get_importance_features(xgb_clf.feature_importances_, train_x.columns)

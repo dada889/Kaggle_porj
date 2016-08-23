@@ -115,9 +115,10 @@ def get_auc(true_y, pred_y):
     return auc(fpr, tpr)
 
 
-def auc_scoring(estimator, x, y):
+def xc_scoring(estimator, x, y):
     pred_y = estimator(x)[:, 1]
-    return get_auc(y, pred_y)
+    result = get_xc_score(y, pred_y)
+    return result
 
 
 def get_xc_score(true_y, pred_y):
