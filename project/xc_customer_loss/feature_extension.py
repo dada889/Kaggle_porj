@@ -437,8 +437,7 @@ def xc_scoring(estimator, x, y):
     pred_y = estimator.predict_proba(x)[:, 1]
     result = get_xc_score(y, pred_y)
     return result
-# kf = KCrossFold(len(y))
-# train_x, test_x, train_y, test_y = kf.get_data(x, y)
+
 
 parameters = {
     'n_estimators': [500],
@@ -457,8 +456,9 @@ gs_clf.grid_scores_
 
 
 
-
-xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=500, max_depth=4, subsample=0.9, min_child_weight=500)
+kf = KCrossFold(len(y))
+train_x, test_x, train_y, test_y = kf.get_data(x, y)
+xgb_clf = xgb.XGBClassifier(silent=1, n_estimators=300, max_depth=4, subsample=0.9, min_child_weight=400)
 xgb_clf.fit(train_x, train_y, verbose=2)
 xgb.plot_importance(xgb_clf)
 # get_importance_features(xgb_clf.feature_importances_, train_x.columns)
@@ -469,6 +469,7 @@ pred_train = xgb_clf.predict_proba(train_x)
 print 'train auc: %s' % get_auc(train_y, pred_train[:, 1])
 print 'test auc: %s' % get_auc(test_y, pred_test[:, 1])
 print 'xiecheng score: %s' % get_xc_score(test_y, pred_test[:, 1])
+
 
 
 
