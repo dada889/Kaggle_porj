@@ -8,6 +8,7 @@ from util.utils_feature import cate_feature_mean
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, Imputer
 import xgboost as xgb
 from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import KFold
 
 
 train_data = pd.read_csv(data_path('Allstate_Claims_Severity') + 'train.csv')
@@ -42,11 +43,52 @@ dm_data = dm_features[dm_features_filtered]
 x_all = pd.concat([train_data[continuous_feature], dm_data], axis=1)
 y_all = train_data['loss']
 
-sf = DataShuffle(y_all)
-train_x, test_x = sf.get_split_data(x_all)
-train_y, test_y = sf.get_split_data(y_all)
+
+kf = KFold(3)
+
+
+def eval_mae(predicted_y, train_dmatrix):
+    val = mean_absolute_error(predicted_y, train_dmatrix.get_label())
+    return 'mean_absolute_error', val  # 不能有空格
+
+for train_idx, test_idx in kf.split(x_all):
+    train_x, train_y = x_all.ix[train_idx, :], y_all[train_idx]
+    test_x, test_y = x_all.ix[test_idx, :], y_all[test_idx]
+    # xgbrg = xgb.XGBRegressor(max_depth=20, learning_rate=0.1, n_estimators=20, silent=True)
+    # xgbrg.fit(train_x, train_y)
+
+
+
+    dtrain = xgb.DMatrix(train_x)
+    dtrain.set_label(train_y)
+    dtest = xgb.DMatrix(test_x)
+    dtest.set_label(test_y)
+    param = {'max_depth':20, 'lambda':3, 'eta':1, 'silent':1, 'booster':'gbtree', 'objective': 'reg:linear',
+             'eval_metric': 'mae', 'nthread': 6, 'subsample': 0.7, 'min_child_weight': 500}
+    watchlist = [(dtest,'eval'), (dtrain,'train')]
+    num_round = 20
+    # bst = xgb.train(param, dtrain, num_round, watchlist, feval=eval_mae)
+    bst = xgb.train(param, dtrain, num_round, watchlist)
+
+    bst.predict(dtrain)
+
+
+
+
+
+
+
+
+# sf = DataShuffle(y_all)
+# train_x, test_x = sf.get_split_data(x_all)
+# train_y, test_y = sf.get_split_data(y_all)
 
 from scipy.stats import randint as sp_randint
+
+# def opt_functino(func, cost_func, shuffle_func):
+
+
+
 
 
 xgbrg = xgb.XGBRegressor(max_depth=20, learning_rate=0.1, n_estimators=50, silent=False)
